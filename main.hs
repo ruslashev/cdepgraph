@@ -1,4 +1,4 @@
-import System.Environment (getArgs)
+import System.Environment (getArgs, getProgName)
 
 source = unlines [
     "digraph G {",
@@ -10,6 +10,18 @@ source = unlines [
 
 main = do
     args <- getArgs
-    mapM_ putStrLn args
-    putStr source
+    progName <- getProgName
+    if length args /= 1 then
+        putStr $ unlines [
+              "Usage:"
+            , progName ++ " (directory)"
+            , ""
+            , "Start a scan for source files in specified directory"
+            ]
+    else
+        startScan $ head args
+
+startScan :: String -> IO ()
+startScan dir = do
+    putStrLn "yeah"
 
