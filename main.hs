@@ -1,6 +1,5 @@
 import System.Environment (getArgs, getProgName)
 import System.Directory (getDirectoryContents, doesDirectoryExist)
-import qualified Data.Map as Map
 
 source = unlines [
     "digraph G {",
@@ -24,18 +23,29 @@ main = do
 startScan :: FilePath -> IO ()
 startScan dir = do
     files <- getFileList dir
-    strippedFiles <- mapM getPPdirectives files
-    let strippedFileList = zip files strippedFiles
-    print strippedFileList
+    let srcFiles = filter (\ x -> dropWhile (/= '.') x `elem`
+                     [".cpp", ".c", ".cxx", ".cc", ".h", ".hh", ".hpp", ".hxx"])
+                     files
+    strippedFiles <- mapM getPPdirectives srcFiles
+    let strippedFilesPairs = zip srcFiles strippedFiles
+    mapM (\ (k,v) -> putStrLn k ) strippedFilesPairs
+    let filesAndTheirIncludes = map scanFile strippedFiles
+    print filesAndTheirIncludes
     return ()
+
+scanFile :: [String] -> [String]
+scanFile [] = []
+scanFile (x:xs) =
+    let (kind,arg) = break (== ' ') x in
+        case kind of "#include" -> tail arg : scanFile xs
+                     _          -> scanFile xs
 
 getPPdirectives :: FilePath -> IO ([String])
 getPPdirectives file = do
     fileContents <- readFile file
-    let ppDirectives = filter (\ x -> not (null x) && head x == '#') $ lines fileContents
-    return ppDirectives
+    return $ filter (\ x -> not (null x) && head x == '#') $ lines fileContents
 
-getFileList :: FilePath -> IO ([FilePath])
+getFileList :: FilePath -> IO ([String])
 getFileList dir = do
     folderContents <- getDirectoryContents dir
     let relativeFolderContents =
@@ -43,7 +53,7 @@ getFileList dir = do
     fileList <- getFiles dir relativeFolderContents
     return fileList
     where
-    getFiles :: FilePath -> [FilePath] -> IO ([FilePath])
+    getFiles :: FilePath -> [FilePath] -> IO ([String])
     getFiles dir (x:xs) = do
         isDir <- doesDirectoryExist x
         if isDir then do
