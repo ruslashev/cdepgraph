@@ -1,13 +1,12 @@
 import System.Environment (getArgs, getProgName)
 import System.Directory (getDirectoryContents, doesDirectoryExist)
+import Control.Monad (forM_)
 
 source = unlines [
     "digraph G {",
-    "node [shape=box/*,fixedsize=true,width=2.0*/]; a; b; c;",
-    "a -> b;",
-    "b -> c;",
-    "overlap=false",
-    "}"]
+    "\tnode [shape=box/*,fixedsize=true,width=2.0*/];",
+    "\toverlap=false"
+    ]
 
 main = do
     args <- getArgs
@@ -27,11 +26,15 @@ startScan dir = do
                      [".cpp", ".c", ".cxx", ".cc", ".h", ".hh", ".hpp", ".hxx"])
                      files
     strippedFiles <- mapM getPPdirectives srcFiles
-    let strippedFilesPairs = zip srcFiles strippedFiles
-    mapM (\ (k,v) -> putStrLn k ) strippedFilesPairs
-    let filesAndTheirIncludes = map scanFile strippedFiles
-    print filesAndTheirIncludes
-    return ()
+    let filesAndTheirIncludes = zip srcFiles $ map scanFile strippedFiles
+    putStrLn source
+    forM_ filesAndTheirIncludes (\ (file,incs) -> do
+            forM_ incs (\ inc ->
+                let unrelFile = drop (length dir + 1) file
+                in putStrLn $ "\t" ++ show unrelFile ++ " -> " ++ show inc
+                )
+        )
+    putStrLn "}"
 
 scanFile :: [String] -> [String]
 scanFile [] = []
