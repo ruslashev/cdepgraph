@@ -1,5 +1,6 @@
 import System.Environment (getArgs, getProgName)
-import System.Directory
+import System.Directory (getDirectoryContents, doesDirectoryExist)
+import qualified Data.Map as Map
 
 source = unlines [
     "digraph G {",
@@ -11,8 +12,8 @@ source = unlines [
 
 main = do
     args <- getArgs
-    progName <- getProgName
-    -- if length args /= 1 then
+    -- if length args /= 1 then do
+    --     progName <- getProgName
     --     putStr $ unlines [
     --           "Usage: " ++ progName ++ " <directory>"
     --         , "Start a scan for source files in specified directory"
@@ -23,8 +24,16 @@ main = do
 startScan :: FilePath -> IO ()
 startScan dir = do
     files <- getFileList dir
-    mapM putStrLn files
+    strippedFiles <- mapM getPPdirectives files
+    let strippedFileList = zip files strippedFiles
+    print strippedFileList
     return ()
+
+getPPdirectives :: FilePath -> IO ([String])
+getPPdirectives file = do
+    fileContents <- readFile file
+    let ppDirectives = filter (\ x -> not (null x) && head x == '#') $ lines fileContents
+    return ppDirectives
 
 getFileList :: FilePath -> IO ([FilePath])
 getFileList dir = do
