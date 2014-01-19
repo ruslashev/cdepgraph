@@ -24,16 +24,17 @@ startScan directory = do
     let dir = reverse $ dropWhile (== '/') $ reverse directory
 
     files <- getFileList dir
-    let srcFilesList = filter (\ x -> dropWhile (/= '.') x `elem`
-                     [".cpp", ".c", ".cxx", ".cc", ".h", ".hh", ".hpp", ".hxx"])
-                     files
+    let srcFilesList = filter (\ x -> -- TODO not accounting multiple dots in filename
+            (dropWhile (/= '.') x) `elem`
+            [".cpp", ".c", ".cxx", ".cc", ".h", ".hh", ".hpp", ".hxx"])
+            files
 
     putStrLn source
 
     forM_ srcFilesList (\ file -> do
             stripped <- getPPdirectives file
             let includes = scanForIncludes stripped
-            relIncludes <- getRelIncludes file includes
+            let relIncludes = getRelIncludes file includes
             forM_ relIncludes (\ inc -> do
                 putStrLn $ "\t" ++ show file ++ " -> " ++ show inc
                 )
@@ -41,35 +42,26 @@ startScan directory = do
 
     putStrLn "}"
 
-getRelIncludes :: String -> [String] -> IO [String]
-getRelIncludes _ [] = return []
-getRelIncludes file incs@(x:xs) = do
-    path <- scanInclude file x
-    rest <- getRelIncludes file xs
-    return $ path : rest
+getRelIncludes :: String -> [String] -> [String]
+getRelIncludes _ [] = []
+getRelIncludes file incs@(x:xs) = (makeRelative file x) : getRelIncludes file xs
 
-scanInclude :: String -> String -> IO String
-scanInclude file inc@(x:xs) = do
-    if x == '<' then do
-        return inc
+makeRelative :: String -> String -> String
+makeRelative file inc@(x:xs) =
+    if x /= '"' then -- #defined path or angular brackets
+        inc
     else
         let brokenPath = break (== '/') $ reverse file
             path = reverse $ drop 1 $ snd brokenPath
-            fileName = reverse $ fst brokenPath
-        in
-        if take 2 xs == "./" then do
-            inc <- scanInclude file ("\"" ++ drop 3 xs)
-            return inc
+            fileName = reverse $ fst brokenPath in
+        if take 3 xs == "../" then
+            let backDir = reverse $ drop 1 $ dropWhile (/= '/') $ reverse path
+            in makeRelative (backDir ++ "/" ++ fileName) ("\"" ++ drop 3 xs)
         else
-            if take 3 xs == "../" then
-                let backDir = reverse $ drop 1 $ dropWhile (/= '/') $ reverse path
-                in do
-                    scanInclude (backDir ++ "/" ++ fileName) ("\"" ++ drop 3 xs)
+            if take 2 xs == "./" then
+                makeRelative file ("\"" ++ drop 3 xs)
             else
-                if x == '"' then do
-                    return $ path ++ "/" ++ init xs
-                else do -- #defined path
-                    return inc
+                path ++ "/" ++ init xs
 
 scanForIncludes :: [String] -> [String]
 scanForIncludes [] = []
