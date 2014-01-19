@@ -1,2 +1,5 @@
 out.png
 link-to-dir
+cdepgraph
+*.hi
+*.o

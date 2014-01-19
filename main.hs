@@ -1,11 +1,9 @@
 import System.Environment (getArgs, getProgName)
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import Control.Monad (forM_)
+import Data.Char (toLower)
 
--- TODO
--- * clusters
-
-source = unlines [
+header = unlines [
     "digraph G {",
     "\tgraph [splines=true,overlap=scale]",
     "\tnode [shape=box,style=filled,fontname=\"Sans\",fontsize=12.0];"
@@ -13,26 +11,26 @@ source = unlines [
 
 main = do
     args <- getArgs
-    -- if length args /= 1 then do
-    --     progName <- getProgName
-    --     putStr $ unlines [
-    --           "Usage: " ++ progName ++ " <directory>"
-    --         , "Start a scan for source files in specified directory"
-    --         ]
-    -- else
-    startScan $ "link-to-dir" -- head args
+    if length args /= 1 then do
+        progName <- getProgName
+        putStr $ unlines [
+            "Usage: " ++ progName ++ " <directory>",
+            "Start a scan for source files in specified directory"]
+    else
+        startScan $ head args
 
 startScan :: FilePath -> IO ()
 startScan directory = do
     let dir = reverse $ dropWhile (== '/') $ reverse directory
 
     files <- getFileList dir
-    let srcFilesList = filter (\ x -> -- TODO not accounting multiple dots in filename
-            (dropWhile (/= '.') x) `elem`
-            [".cpp", ".c", ".cxx", ".cc", ".h", ".hh", ".hpp", ".hxx"])
+    let srcFilesList = filter (\ file ->
+            (map toLower $ reverse $ takeWhile (/= '.') $ reverse file) `elem`
+            ["cpp", "c", "cxx", "cc", "cp", "c++",
+             "hpp", "h", "hxx", "hh", "hp", "h++"])
             files
 
-    putStrLn source
+    putStrLn header
 
     forM_ srcFilesList (\ file -> do
             stripped <- getPPdirectives file
@@ -49,16 +47,15 @@ startScan directory = do
 
 colorizeNode :: String -> String
 colorizeNode inc =
-    -- .cpp  -> yellow F8F8D3
-    -- .hpp  -> green  D4F9D4
-    -- <std> -> blue   D5EEFB
-    -- else  -> red    FAD5D5
-    if head inc == '<' then
-        "color=\"#D5EEFB\""
-    else case reverse $ takeWhile (/= '.') $ reverse inc
-         of "cpp" -> "color=\"#F8F8D3\""
-            "hpp" -> "color=\"#D4F9D4\""
-            _     -> "color=\"#FAD5D5\""
+    if head inc == '<' then blue
+    else if fileExt `elem` ["cpp", "c", "cxx", "cc", "cp", "c++"] then yellow
+    else if fileExt `elem` ["hpp", "h", "hxx", "hh", "hp", "h++"] then green
+    else red
+    where fileExt = reverse $ takeWhile (/= '.') $ reverse inc
+          blue   = "color=\"#D5EEFB\""
+          yellow = "color=\"#F8F8D3\""
+          green  = "color=\"#D4F9D4\""
+          red    = "color=\"#FAD5D5\""
 
 getRelIncludes :: String -> [String] -> [String]
 getRelIncludes _ [] = []
@@ -85,8 +82,10 @@ scanForIncludes :: [String] -> [String]
 scanForIncludes [] = []
 scanForIncludes (x:xs) =
     let (kind,arg) = break (== ' ') x in
-        case kind of "#include" -> tail arg : scanForIncludes xs
-                     _          -> scanForIncludes xs
+        if kind == "#include" then
+            tail arg : scanForIncludes xs
+        else
+            scanForIncludes xs
 
 getPPdirectives :: FilePath -> IO ([String])
 getPPdirectives file = do
