@@ -2,10 +2,13 @@ import System.Environment (getArgs, getProgName)
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import Control.Monad (forM_)
 
+-- TODO
+-- * clusters
+
 source = unlines [
     "digraph G {",
     "\tgraph [splines=true,overlap=scale]",
-    "\tnode [shape=box,fontname=\"Sans\",fontsize=12.0];"
+    "\tnode [shape=box,style=filled,fontname=\"Sans\",fontsize=12.0];"
     ]
 
 main = do
@@ -36,11 +39,26 @@ startScan directory = do
             let includes = scanForIncludes stripped
             let relIncludes = getRelIncludes file includes
             forM_ relIncludes (\ inc -> do
+                putStrLn $ "\tnode [" ++ colorizeNode inc ++ "]"
                 putStrLn $ "\t" ++ show file ++ " -> " ++ show inc
                 )
+            putStrLn $ "\t" ++ show file ++ " [" ++ colorizeNode file ++ "]"
             )
 
     putStrLn "}"
+
+colorizeNode :: String -> String
+colorizeNode inc =
+    -- .cpp  -> yellow F8F8D3
+    -- .hpp  -> green  D4F9D4
+    -- <std> -> blue   D5EEFB
+    -- else  -> red    FAD5D5
+    if head inc == '<' then
+        "color=\"#D5EEFB\""
+    else case reverse $ takeWhile (/= '.') $ reverse inc
+         of "cpp" -> "color=\"#F8F8D3\""
+            "hpp" -> "color=\"#D4F9D4\""
+            _     -> "color=\"#FAD5D5\""
 
 getRelIncludes :: String -> [String] -> [String]
 getRelIncludes _ [] = []
@@ -48,9 +66,7 @@ getRelIncludes file incs@(x:xs) = (makeRelative file x) : getRelIncludes file xs
 
 makeRelative :: String -> String -> String
 makeRelative file inc@(x:xs) =
-    if x /= '"' then -- #defined path or angular brackets
-        inc
-    else
+    if x == '"' then
         let brokenPath = break (== '/') $ reverse file
             path = reverse $ drop 1 $ snd brokenPath
             fileName = reverse $ fst brokenPath in
@@ -62,6 +78,8 @@ makeRelative file inc@(x:xs) =
                 makeRelative file ("\"" ++ drop 3 xs)
             else
                 path ++ "/" ++ init xs
+    else -- #defined path or angular brackets
+        inc
 
 scanForIncludes :: [String] -> [String]
 scanForIncludes [] = []
