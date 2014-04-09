@@ -1,28 +1,29 @@
-import System.Environment (getArgs, getProgName)
-import System.Directory (getDirectoryContents, doesDirectoryExist)
 import Control.Monad (forM_)
+import Control.Exception (catch)
 import Data.Char (toLower)
+import qualified Data.Text as T
+import qualified Data.Text.IO as Tio
+import System.Directory (getDirectoryContents, doesDirectoryExist)
+import System.Environment (getArgs, getProgName)
+import System.Exit (exitFailure)
 
 header = unlines [
-    "digraph G {",
-    "\tgraph [splines=true,overlap=scale]",
-    "\tnode [shape=box,style=filled,fontname=\"Sans\",fontsize=12.0];"
-    ]
+    "digraph G",
+    "{",
+    '\t' : "graph [splines=true, overlap=scale]",
+    '\t' : "node [shape=box, style=filled, fontname=\"Sans\", fontsize=12.0];"]
 
 main = do
     args <- getArgs
     if length args /= 1 then do
         progName <- getProgName
-        putStr $ unlines [
-            "Usage: " ++ progName ++ " <directory>",
-            "Start a scan for source files in specified directory"]
+        putStrLn $ "Usage: " ++ progName ++ " <directory>"
+        putStrLn $ "Start a scan for source files in specified directory"
     else
         startScan $ head args
 
-startScan :: FilePath -> IO ()
-startScan directory = do
-    let dir = reverse $ dropWhile (== '/') $ reverse directory
-
+startScan :: String -> IO ()
+startScan dir = do
     files <- getFileList dir
     let srcFilesList = filter (\ file ->
             (map toLower $ reverse $ takeWhile (/= '.') $ reverse file) `elem`
@@ -89,26 +90,29 @@ scanForIncludes (x:xs) =
 
 getPPdirectives :: FilePath -> IO ([String])
 getPPdirectives file = do
-    fileContents <- readFile file
-    return $ filter (\ x -> not (null x) && head x == '#') $ lines fileContents
+    fileContents <- Tio.readFile file
+    return $ map T.unpack $ filter (\ x -> not (T.null x) && T.head x == '#') $ T.lines fileContents
 
-getFileList :: FilePath -> IO ([String])
+getFileList :: String -> IO ([String])
 getFileList dir = do
-    folderContents <- getDirectoryContents dir
-    let relativeFolderContents =
-            map ((dir ++ "/") ++) $ filter (\ x -> head x /= '.') folderContents
-    fileList <- getFiles dir relativeFolderContents
+    let dirWithSlash = if (last dir) == '/' then dir else dir ++ "/"
+    folderContents <- (getDirectoryContents dirWithSlash) `catch` handler
+    let absoluteFolderContents =
+            map (dirWithSlash ++) $ filter (\ x -> head x /= '.') folderContents
+    fileList <- openDirs absoluteFolderContents
     return fileList
     where
-    getFiles :: FilePath -> [FilePath] -> IO ([String])
-    getFiles dir (x:xs) = do
+    openDirs :: [FilePath] -> IO ([String])
+    openDirs [] = return []
+    openDirs (x:xs) = do
         isDir <- doesDirectoryExist x
-        if isDir then do
-            files <- getFileList x
-            rest  <- getFiles dir xs
-            return $ files ++ rest
-        else do
-            rest <- getFiles dir xs
-            return $ x : rest
-    getFiles _ [] = return []
+        fileList <- if isDir then getFileList x
+                    else return [x]
+        rest <- openDirs xs
+        return $ fileList ++ rest
+    handler :: IOError -> IO [FilePath]
+    handler _ = do
+        putStrLn $ "Failed to open directory \"" ++ dir ++ "\""
+        exitFailure
+        return [""]
 
