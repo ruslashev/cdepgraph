@@ -1,13 +1,13 @@
 DEBUG_DIR = ~/Documents/2.0/supvime/
 
 default:
-	ghc --make main.hs -O3 -o cdepgraph
+	ghc --make cdepgraph.hs -O2
 
 debug:
-	runhaskell main.hs $(DEBUG_DIR)
+	runhaskell cdepgraph.hs $(DEBUG_DIR)
 
 graph:
-	runhaskell main.hs $(DEBUG_DIR) | neato -T png > out.png
+	runhaskell cdepgraph.hs $(DEBUG_DIR) | neato -T png > out.png
 
 open: graph
 	gpicview out.png
