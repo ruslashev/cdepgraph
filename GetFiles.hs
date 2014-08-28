@@ -3,7 +3,7 @@ module GetFiles (getFileList) where
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 import System.Exit (exitFailure)
 
-getFileList :: String -> IO (Maybe ([String]))
+getFileList :: String -> IO (Maybe [String])
 getFileList dir = do
     dirValid <- doesDirectoryExist dir
     if dirValid then do
@@ -14,9 +14,9 @@ getFileList dir = do
     -- doing nothing right now,
     -- TODO trim repeating prefixes in paths
 
-getAbsFileList :: String -> IO ([String])
+getAbsFileList :: String -> IO [String]
 getAbsFileList dir = do
-    folderContents <- (getDirectoryContents dir)
+    folderContents <- getDirectoryContents dir
 
     let notHidden = filter (\ x -> head x /= '.') folderContents
 
@@ -24,13 +24,12 @@ getAbsFileList dir = do
 
     let contentsAbsPath = map (thisDirectory ++) notHidden
 
-    fileList <- openDirs contentsAbsPath
+    openDirs contentsAbsPath
 
-    return fileList
-
+appendSlash :: String -> String
 appendSlash dir = if last dir == '/' then dir else dir ++ "/"
 
-openDirs :: [String] -> IO ([String])
+openDirs :: [String] -> IO [String]
 openDirs [] = return []
 openDirs (x:xs) = do
     isDirectory <- doesDirectoryExist x
