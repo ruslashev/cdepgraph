@@ -1,7 +1,6 @@
 module GetFiles (getFileList) where
 
 import System.Directory (getDirectoryContents, doesDirectoryExist)
-import System.Exit (exitFailure)
 
 getFileList :: String -> IO (Maybe [String])
 getFileList dir = do

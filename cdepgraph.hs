@@ -27,32 +27,42 @@ header = unlines [
 startScan :: String -> IO ()
 startScan dir = do
     filesMaybe <- getFileList dir
+
     when (isNothing filesMaybe) $ do
         putStrLn $ "Failed to open directory \"" ++ dir ++ "\""
         exitFailure
-    let files = case filesMaybe of Just list -> list
 
-    let srcFilesList = filter isSrcFile files
+    let files = case filesMaybe of
+                Just list -> list
+                Nothing   -> [] -- that won't happen. Quit complaining, ghc-mod
+
+    let sourceFiles = filter isSourceFile files
 
     putStrLn header
 
-    forM_ srcFilesList (\ file -> do
-            includes <- getIncludes file
-            let relIncludes = getRelIncludes file includes
-            forM_ relIncludes (\ inc -> do
-                putStrLn $ "\tnode [" ++ colorizeNode (T.unpack inc) ++ "]"
-                putStrLn $ "\t" ++ show file ++ " -> " ++ show inc
-                )
-            putStrLn $ "\t" ++ show file ++ " [" ++ colorizeNode file ++ "]"
-            )
+    mainOutput sourceFiles
 
-    putStrLn "}"
-    where isSrcFile file =
-              (map toLower . reverse . takeWhile (/= '.') . reverse) file
-              `elem` ["cpp", "c", "cxx", "cc", "cp", "c++",
-                      "hpp", "h", "hxx", "hh", "hp", "h++"]
+isSourceFile :: String -> Bool
+isSourceFile file =
+    extension `elem`
+         ["cpp", "c", "cxx", "cc", "cp", "c++",
+          "hpp", "h", "hxx", "hh", "hp", "h++"]
+    where extension = (map toLower . reverse . takeWhile (/= '.') . reverse) file
 
-getIncludes :: FilePath -> IO [T.Text]
+mainOutput :: [String] -> IO ()
+mainOutput [] = putStrLn "}"
+mainOutput (file:files) = do
+    includes <- getIncludes file
+    let relIncludes = getRelIncludes file includes
+    forM_ relIncludes (\ inc -> do
+        putStrLn $ "\tnode [" ++ colorizeNode (T.unpack inc) ++ "]"
+        putStrLn $ "\t" ++ show file ++ " -> " ++ show inc
+        )
+    putStrLn $ "\t" ++ show file ++ " [" ++ colorizeNode file ++ "]"
+
+    mainOutput files
+
+getIncludes :: String -> IO [T.Text]
 getIncludes file = do
     fileContents <- Tio.readFile file
     let ppDirectives = (filter (\ line -> T.head line == '#') .
