@@ -1,6 +1,5 @@
 import Control.Monad (forM_,when)
 import Data.Char (toLower)
-import Data.List (foldl')
 import Data.Maybe (isNothing)
 import qualified Data.Text as T
 import qualified Data.Text.IO as Tio
@@ -9,6 +8,7 @@ import System.Exit (exitFailure)
 
 import GetFiles
 
+main :: IO ()
 main = do
     args <- getArgs
     if length args /= 1 then do
@@ -18,13 +18,18 @@ main = do
     else
         startScan $ head args
 
+header :: String
 header = unlines [
     "digraph G",
     "{",
     '\t' : "graph [splines=true, overlap=scale]",
     '\t' : "node [shape=box, style=filled, fontname=\"Sans\", fontsize=12.0];" ]
+
+sourceFileExtensions, headerFileExtensions :: [String]
 sourceFileExtensions = ["cpp", "c", "cxx", "cc", "cp", "c++"]
 headerFileExtensions = ["hpp", "h", "hxx", "hh", "hp", "h++"]
+
+includeText :: T.Text
 includeText = T.pack "#include"
 
 startScan :: String -> IO ()

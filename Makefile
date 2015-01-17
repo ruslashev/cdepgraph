@@ -1,4 +1,4 @@
-DEBUG_DIR = ~/Documents/2.0/supvime/
+DEBUG_DIR = ~/Documents/supvime/
 
 default:
 	ghc --make cdepgraph.hs -O2
