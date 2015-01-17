@@ -6,7 +6,7 @@ import qualified Data.Text.IO as Tio
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
 
-import GetFiles
+import IORead
 
 main :: IO ()
 main = do
