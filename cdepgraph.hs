@@ -34,15 +34,7 @@ includeText = T.pack "#include"
 
 startScan :: String -> IO ()
 startScan dir = do
-    filesMaybe <- getFileList dir
-
-    when (isNothing filesMaybe) $ do
-        putStrLn $ "Failed to open directory \"" ++ dir ++ "\""
-        exitFailure
-
-    let files = case filesMaybe of
-                Just list -> list
-                Nothing   -> [] -- that won't happen. Quit complaining, ghc-mod
+    filesE <- getFileList dir
 
     let sourceFiles = filter isSourceFile files
 
