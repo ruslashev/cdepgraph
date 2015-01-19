@@ -1,11 +1,11 @@
-module IORead (getFileList)
+module IORead (getAbsFileList)
 where
 
 import Control.Applicative
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 
-getFileList :: String -> IO (Either String [String])
-getFileList dir = do
+getAbsFileList :: String -> IO (Either String [String])
+getAbsFileList dir = do
     valid <- doesDirectoryExist dir
     if valid then do
         list <- getFiles dir

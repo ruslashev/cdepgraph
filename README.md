@@ -6,7 +6,7 @@
 
 Start a scan for source files in specified directory.
 
-The resulting GraphViz (`neato`) code is outputted to `stdout`, so the following way might be preffered:
+The resulting GraphViz (`neato`) code is outputted to `stdout`, so the following way might be preferred:
 
     $ cdepgraph src/ | neato -T png > out.png
 

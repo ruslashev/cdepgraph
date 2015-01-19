@@ -14,7 +14,11 @@ main = do
     if length args /= 1 then do
         progName <- getProgName
         putStrLn $ "Usage: " ++ progName ++ " <directory>"
-        putStrLn   "Start a scan for source files in specified directory"
+        putStrLn   "Start a scan for source files in specified directory."
+        putStrLn   ""
+        putStrLn   "The resulting GraphViz (neato) code is outputted to stdout,"
+        putStrLn   ", so the following way might be preferred:"
+        putStrLn $ progName ++ " src/ | neato -T png > out.png"
     else
         startScan $ head args
 
@@ -34,9 +38,9 @@ includeText = T.pack "#include"
 
 startScan :: String -> IO ()
 startScan dir = do
-    filesE <- getFileList dir
+    filesE <- getAbsFileList dir
 
-    let sourceFiles = filter isSourceFile files
+    let sourceFiles = filter isSourceFile filesE
 
     putStrLn header
 
