@@ -1,8 +1,4 @@
 import Control.Monad (forM_,when)
-import Data.Char (toLower)
-import Data.Maybe (isNothing)
-import qualified Data.Text as T
-import qualified Data.Text.IO as Tio
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
 
@@ -29,27 +25,13 @@ header = unlines [
     '\t' : "graph [splines=true, overlap=scale]",
     '\t' : "node [shape=box, style=filled, fontname=\"Sans\", fontsize=12.0];" ]
 
-sourceFileExtensions, headerFileExtensions :: [String]
-sourceFileExtensions = ["cpp", "c", "cxx", "cc", "cp", "c++"]
-headerFileExtensions = ["hpp", "h", "hxx", "hh", "hp", "h++"]
-
-includeText :: T.Text
-includeText = T.pack "#include"
-
 startScan :: String -> IO ()
 startScan dir = do
     filesE <- getAbsFileList dir
 
-    let sourceFiles = filter isSourceFile filesE
-
     putStrLn header
 
     mainOutput sourceFiles
-
-isSourceFile :: String -> Bool
-isSourceFile file =
-    extension `elem` sourceFileExtensions ++ headerFileExtensions
-    where extension = (map toLower . reverse . takeWhile (/= '.') . reverse) file
 
 mainOutput :: [String] -> IO ()
 mainOutput [] = putStrLn "}"
@@ -63,17 +45,6 @@ mainOutput (file:files) = do
     putStrLn $ "\t" ++ show file ++ " [" ++ colorizeNode file ++ "]"
 
     mainOutput files
-
-getIncludes :: String -> IO [T.Text]
-getIncludes file = do
-    fileContents <- Tio.readFile file
-    let includedFiles =
-            [ T.tail $ T.dropWhile (/= ' ') line
-            | line <- T.lines fileContents
-            , not $ T.null line
-            , T.take 8 line == includeText
-            ]
-    return includedFiles
 
 makeRelative :: String -> T.Text -> T.Text
 makeRelative filename include =
