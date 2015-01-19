@@ -46,25 +46,6 @@ mainOutput (file:files) = do
 
     mainOutput files
 
-makeRelative :: String -> T.Text -> T.Text
-makeRelative filename include =
-    if x == '"' then
-        let fileDir = reverse $ tail $ dropWhile (/= '/') $ reverse filename in
-        if T.take 3 xs == T.pack "../" then
-            let upperDirectory =
-                    reverse $ drop 1 $ dropWhile (/= '/') $ reverse fileDir
-            in makeRelative (upperDirectory ++ "/")
-                            (T.pack "\"" `T.append` T.drop 3 xs)
-        else
-            if T.take 2 xs == T.pack "./" then
-                makeRelative filename (T.pack "\"" `T.append` T.drop 3 xs)
-            else
-                T.pack fileDir `T.append` T.cons '/' (T.init xs)
-    else -- angular brackets or #defined path
-        include
-    where x  = T.head include
-          xs = T.tail include
-
 colorizeNode :: String -> String
 colorizeNode inc
     | head inc == '<' = blue
