@@ -1,8 +1,10 @@
-import Control.Monad (forM_,when)
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
+import qualified Data.Text.IO as Tio
 
 import IORead
+import Processing
+import IOWrite
 
 main :: IO ()
 main = do
@@ -12,42 +14,24 @@ main = do
         putStrLn $ "Usage: " ++ progName ++ " <directory>"
         putStrLn   "Start a scan for source files in specified directory."
         putStrLn   ""
-        putStrLn   "The resulting GraphViz (neato) code is outputted to stdout,"
-        putStrLn   ", so the following way might be preferred:"
-        putStrLn $ progName ++ " src/ | neato -T png > out.png"
+        putStrLn   "The resulting GraphViz (neato) code is outputted to"
+        putStrLn   "stdout, so the following way might be preferred:"
+        putStrLn $ "    " ++ progName ++ " src/ | neato -T png > out.png"
     else
         startScan $ head args
 
 startScan :: String -> IO ()
 startScan dir = do
     filesE <- getAbsFileList dir
+    files <- test filesE
 
-    putStrLn header
+    processed <- process files
 
-    mainOutput sourceFiles
-
-mainOutput :: [String] -> IO ()
-mainOutput [] = putStrLn "}"
-mainOutput (file:files) = do
-    includes <- getIncludes file
-    let relIncludes = map (makeRelative file) includes
-    forM_ relIncludes (\ inc -> do
-        putStrLn $ "\tnode [" ++ colorizeNode (T.unpack inc) ++ "]"
-        putStrLn $ "\t" ++ show file ++ " -> " ++ show inc
-        )
-    putStrLn $ "\t" ++ show file ++ " [" ++ colorizeNode file ++ "]"
-
-    mainOutput files
-
-colorizeNode :: String -> String
-colorizeNode inc
-    | head inc == '<' = blue
-    | fileExt `elem` sourceFileExtensions = yellow
-    | fileExt `elem` headerFileExtensions = green
-    | otherwise = red
-    where fileExt = reverse $ takeWhile (/= '.') $ reverse inc
-          blue   = "color=\"#D5EEFB\""
-          yellow = "color=\"#F8F8D3\""
-          green  = "color=\"#D4F9D4\""
-          red    = "color=\"#FAD5D5\""
+    Tio.putStrLn $ genOutput processed
+    where
+    test (Left x) = do
+        putStrLn x
+        exitFailure
+    test (Right list) =
+        return list
 

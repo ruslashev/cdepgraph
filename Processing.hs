@@ -1,4 +1,10 @@
-module Processing (process, SrcFile, getExtension)
+module Processing
+    ( process
+    , SrcFile(..)
+    , getExtension
+    , sourceFileExts
+    , headerFileExts
+    )
 where
 
 import Control.Applicative

@@ -18,7 +18,10 @@ getFiles dir = do
     if not isDir then
         return [dir]
     else do
-        abs <- (map ((dir++"/") ++) . filter (\x -> head x /= '.'))
+        abs <- (map (ensureSlash dir ++) . filter (\x -> head x /= '.'))
                 <$> getDirectoryContents dir
         concat <$> mapM getFiles abs
+
+ensureSlash :: String -> String
+ensureSlash dir = if last dir == '/' then dir else dir ++ "/"
 
