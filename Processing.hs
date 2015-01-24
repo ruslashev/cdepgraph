@@ -1,4 +1,4 @@
-module Processing (process)
+module Processing (process, SrcFile, getExtension)
 where
 
 import Control.Applicative
@@ -10,11 +10,14 @@ data SrcFile = SrcFile { name :: T.Text
                        , includes :: [T.Text]
                        } deriving (Show)
 
-getDirectory :: T.Text -> T.Text
-getDirectory = T.reverse . T.drop 1 . T.dropWhile (/= '/') . T.reverse
+process :: [String] -> IO [SrcFile]
+process = mapM getSrcFile . filter isSourceFile
 
 getExtension :: String -> String
 getExtension = map toLower . reverse . takeWhile (/= '.') . reverse
+
+getDirectory :: T.Text -> T.Text
+getDirectory = T.reverse . T.drop 1 . T.dropWhile (/= '/') . T.reverse
 
 sourceFileExts, headerFileExts :: [String]
 sourceFileExts = ["cpp", "c", "cxx", "cc", "cp", "c++"]
@@ -23,9 +26,6 @@ headerFileExts = ["hpp", "h", "hxx", "hh", "hp", "h++"]
 isSourceFile :: String -> Bool
 isSourceFile file =
     getExtension file `elem` (sourceFileExts ++ headerFileExts)
-
-process :: [String] -> IO [SrcFile]
-process = mapM getSrcFile . filter isSourceFile
 
 getSrcFile :: String -> IO SrcFile
 getSrcFile file = do

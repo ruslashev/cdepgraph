@@ -18,13 +18,6 @@ main = do
     else
         startScan $ head args
 
-header :: String
-header = unlines [
-    "digraph G",
-    "{",
-    '\t' : "graph [splines=true, overlap=scale]",
-    '\t' : "node [shape=box, style=filled, fontname=\"Sans\", fontsize=12.0];" ]
-
 startScan :: String -> IO ()
 startScan dir = do
     filesE <- getAbsFileList dir
