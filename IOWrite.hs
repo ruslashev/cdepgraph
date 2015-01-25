@@ -2,8 +2,12 @@ module IOWrite (genOutput)
 where
 
 import qualified Data.Text as T
+import qualified Data.Map as Map
+import Data.List (nub)
 
 import Processing
+
+type NodeMap = Map.Map T.Text Int
 
 header :: [T.Text]
 header =
@@ -15,28 +19,35 @@ header =
 
 genOutput :: [SrcFile] -> T.Text
 genOutput srcFiles =
-    T.unlines $
+    let listOfNodes = nub $ makeListOfNodes srcFiles
+    in T.unlines $
         header ++
-        assignNodes srcFiles
+        assignNodes listOfNodes
 
-assignNodes :: [SrcFile] -> [T.Text]
-assignNodes list =
+makeListOfNodes :: [SrcFile] -> [T.Text]
+makeListOfNodes [] = []
+makeListOfNodes (SrcFile name includes : rest) =
+    name : includes ++ makeListOfNodes rest
+
+assignNodes :: [T.Text] -> [T.Text]
+assignNodes listOfNodes =
     foldr
-    (\ (idx, fileName) output ->
-        T.pack (show idx ++ " [label=\"") `T.append`
-        fileName `T.append`
+    (\ (idx, text) output ->
+        T.pack (show idx ++ "\t [label=\"") `T.append`
+        text `T.append`
         T.pack "\", " `T.append`
-        colorizeNode fileName `T.append`
+        colorizeNode text `T.append`
         T.pack "]"
         : output
-    ) [] (zip [1..] listOfFilenames)
-    where listOfFilenames = [ name srcFile | srcFile <- list ]
+    ) [] (zip [1..] listOfNodes)
 
 colorizeNode :: T.Text -> T.Text
-colorizeNode file
-    | ext `elem` sourceFileExts = yellow
-    | ext `elem` headerFileExts = green
-    where ext    = getExtension $ T.unpack file
+colorizeNode text
+    | T.head text == '<'         = blue
+    | ext `elem` sourceFileExtsT = yellow
+    | ext `elem` headerFileExtsT = green
+    | otherwise                  = red
+    where ext = getExtensionT text
           blue   = T.pack "color=\"#D5EEFB\""
           yellow = T.pack "color=\"#F8F8D3\""
           green  = T.pack "color=\"#D4F9D4\""

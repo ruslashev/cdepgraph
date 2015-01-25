@@ -1,9 +1,9 @@
 module Processing
     ( process
     , SrcFile(..)
-    , getExtension
-    , sourceFileExts
-    , headerFileExts
+    , getExtensionT
+    , sourceFileExtsT
+    , headerFileExtsT
     )
 where
 
@@ -22,12 +22,18 @@ process = mapM getSrcFile . filter isSourceFile
 getExtension :: String -> String
 getExtension = map toLower . reverse . takeWhile (/= '.') . reverse
 
+getExtensionT :: T.Text -> T.Text
+getExtensionT = T.map toLower . T.reverse . T.takeWhile (/= '.') . T.reverse
+
 getDirectory :: T.Text -> T.Text
 getDirectory = T.reverse . T.drop 1 . T.dropWhile (/= '/') . T.reverse
 
 sourceFileExts, headerFileExts :: [String]
 sourceFileExts = ["cpp", "c", "cxx", "cc", "cp", "c++"]
 headerFileExts = ["hpp", "h", "hxx", "hh", "hp", "h++"]
+sourceFileExtsT, headerFileExtsT :: [T.Text]
+sourceFileExtsT = map T.pack sourceFileExts
+headerFileExtsT = map T.pack headerFileExts
 
 isSourceFile :: String -> Bool
 isSourceFile file =

@@ -1,7 +1,7 @@
 DEBUG_DIR = ~/Documents/supvime/
 
 default:
-	ghc --make cdepgraph.hs -O2
+	ghc --make cdepgraph.hs
 
 debug:
 	runhaskell cdepgraph.hs $(DEBUG_DIR)

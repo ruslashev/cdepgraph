@@ -28,10 +28,11 @@ startScan dir = do
     processed <- process files
 
     Tio.putStrLn $ genOutput processed
+
     where
-    test (Left x) = do
-        putStrLn x
-        exitFailure
-    test (Right list) =
-        return list
+        test (Left x) = do
+            putStrLn x
+            exitFailure
+        test (Right list) =
+            return list
 
