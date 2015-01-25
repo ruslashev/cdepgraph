@@ -27,7 +27,7 @@ startScan dir = do
 
     processed <- process files
 
-    Tio.putStrLn $ genOutput processed
+    Tio.putStr $ genOutput processed
 
     where
         test (Left x) = do

@@ -12,10 +12,9 @@ type NodeMap = Map.Map T.Text Int
 
 header :: [T.Text]
 header =
-    [ T.pack "digraph G"
-    , T.pack "{"
-    , T.pack "graph [splines=true, overlap=scale]"
-    , T.pack "node [shape=box, style=filled, fontname=\"Sans\", fontsize=12.0];"
+    [ T.pack "digraph G {"
+    , T.pack "graph [splines=true,overlap=scale]"
+    , T.pack "node [shape=box,style=filled,fontname=\"Sans\",fontsize=12.0];"
     ]
 
 genOutput :: [SrcFile] -> T.Text
@@ -41,9 +40,9 @@ assignNodes :: [T.Text] -> [T.Text]
 assignNodes listOfNodes =
     foldr
         (\ (idx, text) output ->
-            T.pack (show idx ++ "\t [label=\"") `T.append`
+            T.pack (show idx ++ " [label=\"") `T.append`
             text `T.append`
-            T.pack "\", " `T.append`
+            T.pack "\"," `T.append`
             colorizeNode text `T.append`
             T.pack "]"
             : output
@@ -67,7 +66,7 @@ genRelationships (SrcFile name includes : rest) nodeMap =
     foldl
         (\ output include ->
             lookup name `T.append`
-            T.pack " -> " `T.append`
+            T.pack "->" `T.append`
             lookup include
             : output
         ) [] includes
