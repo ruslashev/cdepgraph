@@ -1,3 +1,5 @@
+module Main where
+
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
 import qualified Data.Text.IO as Tio

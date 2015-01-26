@@ -3,3 +3,4 @@ link-to-dir
 cdepgraph
 *.hi
 *.o
+*sandbox*
