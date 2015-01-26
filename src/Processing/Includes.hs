@@ -1,4 +1,4 @@
-module Processing
+module Processing.Includes
     ( process
     , SrcFile(..)
     , getExtensionT

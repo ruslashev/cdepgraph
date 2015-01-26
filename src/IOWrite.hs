@@ -6,7 +6,7 @@ import qualified Data.Map as Map
 import Data.List (nub)
 import Data.Maybe (fromMaybe)
 
-import Processing
+import Processing.Includes
 
 type NodeMap = Map.Map T.Text Int
 

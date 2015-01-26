@@ -5,7 +5,7 @@ import System.Exit (exitFailure)
 import qualified Data.Text.IO as Tio
 
 import IORead
-import Processing
+import Processing.Includes
 import IOWrite
 
 main :: IO ()
