@@ -3,12 +3,10 @@ where
 
 import qualified Data.Text as T
 import qualified Data.Map as Map
-import Data.List (nub)
-import Data.Maybe (fromMaybe)
 
 import Processing.Includes
 
-type NodeMap = Map.Map T.Text Int
+{-
 
 header :: [T.Text]
 header =
@@ -27,14 +25,6 @@ genOutput srcFiles =
         [T.pack ""] ++
         genRelationships srcFiles nodeMap ++
         [T.pack "}"]
-
-makeListOfNodes :: [SrcFile] -> [T.Text]
-makeListOfNodes [] = []
-makeListOfNodes (SrcFile name includes : rest) =
-    name : includes ++ makeListOfNodes rest
-
-constructMap :: [T.Text] -> NodeMap
-constructMap listOfNodes = Map.fromList $ zip listOfNodes [1..]
 
 assignNodes :: NodeMap -> [T.Text]
 assignNodes nodeMap =
@@ -75,4 +65,6 @@ colorizeNode text
           yellow = T.pack "color=\"#F8F8D3\""
           green  = T.pack "color=\"#D4F9D4\""
           red    = T.pack "color=\"#FAD5D5\""
+
+-}
 

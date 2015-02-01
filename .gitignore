@@ -4,3 +4,4 @@ cdepgraph
 *.hi
 *.o
 *sandbox*
+dist

@@ -6,6 +6,7 @@ import qualified Data.Text.IO as Tio
 
 import IORead
 import Processing.Includes
+import Processing.Clusters
 import IOWrite
 
 main :: IO ()
@@ -22,6 +23,8 @@ main = do
     else
         startScan $ head args
 
+-- IORead -> Processing.Includes -> Processing.Clusters -> IOWrite
+
 startScan :: String -> IO ()
 startScan dir = do
     filesE <- getAbsFileList dir
@@ -29,7 +32,7 @@ startScan dir = do
 
     processed <- process files
 
-    Tio.putStr $ genOutput processed
+    putStrLn "hi"
 
     where
         test (Left x) = do
