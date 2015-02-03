@@ -35,9 +35,11 @@ srcFilesToList (SrcFile name includes : rest) =
 makeSrcFilesI :: [T.Text] -> [SrcFile] -> [SrcFileI]
 makeSrcFilesI _ [] = []
 makeSrcFilesI lookupList (SrcFile name includes : rest) =
-    SrcFileI (lookup name) (map lookup includes) : makeSrcFilesI lookupList rest
-        where lookup :: T.Text -> Int
-              lookup key = fromMaybe 0 (elemIndex key lookupList)
+    SrcFileI (lookupI name lookupList) (map lookupI includes lookupList) :
+        makeSrcFilesI lookupList rest
+
+lookupI :: T.Text -> [T.Text] -> Int
+lookupI key lookupList = fromMaybe 0 (elemIndex key lookupList)
 
 removeRepeats :: [T.Text] -> [T.Text]
 removeRepeats list@(x:_) =

@@ -2,57 +2,32 @@ module IOWrite
 where
 
 import qualified Data.Text as T
-import qualified Data.Map as Map
 
-import Processing.Includes
-
-{-
+import Processing.Clusters
 
 header :: [T.Text]
-header =
-    [ T.pack "digraph G {"
-    , T.pack "graph [overlap=prism,splines=true]"
-    , T.pack "node [shape=box,style=filled,fontname=\"Sans\",fontsize=12.0];"
+header = map T.pack
+    [ "digraph G {"
+    , "graph [overlap=prism,splines=true]"
+    , "node [shape=box,style=filled,fontname=\"Sans\",fontsize=12.0];"
     ]
 
-genOutput :: [SrcFile] -> T.Text
-genOutput srcFiles =
-    let listOfNodes = nub $ makeListOfNodes srcFiles
-        nodeMap = constructMap listOfNodes
+genOutput :: [Cluster] -> [SrcFileI] -> T.Text
+genOutput clusters srcFiles =
+    let nodes = assignNodes clusters srcFilesI
     in T.unlines $
-        header ++
-        assignNodes nodeMap ++
-        [T.pack ""] ++
-        genRelationships srcFiles nodeMap ++
-        [T.pack "}"]
+        header
 
-assignNodes :: NodeMap -> [T.Text]
-assignNodes nodeMap =
-    foldr
-        (\ text output ->
-            lookupMap text nodeMap `T.append`
-            T.pack " [label=\"" `T.append`
-            text `T.append`
-            T.pack "\"," `T.append`
-            colorizeNode text `T.append`
-            T.pack "]"
-            : output
-        ) [] (Map.keys nodeMap)
+textForNode :: T.Text -> [SrcFilesI] -> [T.Text]
+textForNode name srcFiles =
+    lookupT name srcFiles `T.append`
+    T.pack " [label=\"" `T.append`
+    name `T.append`
+    T.pack "\", " `T.append`
+    colorizeNode name `T.append`
+    T.pack "]"
 
-genRelationships :: [SrcFile] -> NodeMap -> [T.Text]
-genRelationships [] _ = []
-genRelationships (SrcFile name includes : rest) nodeMap =
-    foldl
-        (\ output include ->
-            lookupMap name nodeMap `T.append`
-            T.pack "->" `T.append`
-            lookupMap include nodeMap
-            : output
-        ) [] includes
-    ++ genRelationships rest nodeMap
-
-lookupMap :: T.Text -> NodeMap -> T.Text
-lookupMap key nodeMap = T.pack $ show $ fromMaybe 0 (Map.lookup key nodeMap)
+lookupT = T.pack . show . lookupI
 
 colorizeNode :: T.Text -> T.Text
 colorizeNode text
@@ -65,6 +40,4 @@ colorizeNode text
           yellow = T.pack "color=\"#F8F8D3\""
           green  = T.pack "color=\"#D4F9D4\""
           red    = T.pack "color=\"#FAD5D5\""
-
--}
 

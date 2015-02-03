@@ -31,8 +31,9 @@ startScan dir = do
     files <- test filesE
 
     processed <- process files
+    let (clusters,srcFilesI) = clusterize processed
 
-    putStrLn "hi"
+    putStr $ genOutput clusters srcFilesI
 
     where
         test (Left x) = do
