@@ -3,7 +3,10 @@ where
 
 import qualified Data.Text as T
 
+import Control.Applicative
+
 import Processing.Clusters
+import Processing.Includes
 
 header :: [T.Text]
 header = map T.pack
@@ -13,21 +16,34 @@ header = map T.pack
     ]
 
 genOutput :: [Cluster] -> [SrcFileI] -> T.Text
-genOutput clusters srcFiles =
-    let nodes = assignNodes clusters srcFilesI
+genOutput clusters srcFilesI =
+    let nodes = concatMap (textForCluster srcFilesI) clusters 
     in T.unlines $
-        header
+        header ++
+        nodes
 
-textForNode :: T.Text -> [SrcFilesI] -> [T.Text]
+textForCluster :: [SrcFileI] -> Cluster -> [T.Text]
+textForCluster srcFiles (Folder name next) =
+    [ T.pack "subgraph cluster_" `T.append` name `T.append` T.pack " {" ] ++
+    [ T.pack "style=filled;" ] ++
+    [ T.pack "color=lightgrey;" ] ++
+    [ T.pack "label=" `T.append` name `T.append` T.pack ";" ] ++
+    map (textForCluster srcFiles) next ++
+    [ T.pack "}" ]
+textForCluster srcFiles (SystemInclude name) = [textForNode name srcFiles]
+textForCluster srcFiles (File name) = [textForNode name srcFiles]
+
+textForNode :: T.Text -> [SrcFileI] -> T.Text
 textForNode name srcFiles =
-    lookupT name srcFiles `T.append`
+    lookupT srcFiles name `T.append`
     T.pack " [label=\"" `T.append`
     name `T.append`
     T.pack "\", " `T.append`
     colorizeNode name `T.append`
     T.pack "]"
 
-lookupT = T.pack . show . lookupI
+lookupT :: [T.Text] -> T.Text -> T.Text
+lookupT hay needle = T.pack $ show $ lookupI hay needle
 
 colorizeNode :: T.Text -> T.Text
 colorizeNode text

@@ -18,13 +18,12 @@ data SrcFileI = SrcFileI { nameI :: Int
 
 clusterize :: [SrcFile] -> ([Cluster], [SrcFileI])
 clusterize srcFiles =
-    let filesAndIncludes = nub $ sort $ srcFilesToList srcFiles
+    let listOfFilesAndIncludes = nub $ sort $ srcFilesToList srcFiles
         (fileIncludes,systemIncludes) =
-            partition (\ x -> T.head x == '/') filesAndIncludes
-        lookupList = systemIncludes ++ fileIncludes
-        srcFilesI = makeSrcFilesI lookupList srcFiles
+            partition (\ x -> T.head x == '/') listOfFilesAndIncludes
         fileIncsRepeatsRemoved = removeRepeats fileIncludes
         clusters = makeClusters fileIncsRepeatsRemoved systemIncludes
+        srcFilesI = makeSrcFilesI listOfFilesAndIncludes srcFiles
     in (clusters, srcFilesI)
 
 srcFilesToList :: [SrcFile] -> [T.Text]
@@ -35,11 +34,11 @@ srcFilesToList (SrcFile name includes : rest) =
 makeSrcFilesI :: [T.Text] -> [SrcFile] -> [SrcFileI]
 makeSrcFilesI _ [] = []
 makeSrcFilesI lookupList (SrcFile name includes : rest) =
-    SrcFileI (lookupI name lookupList) (map lookupI includes lookupList) :
+    SrcFileI (lookupI lookupList name) (map (lookupI lookupList) includes) :
         makeSrcFilesI lookupList rest
 
-lookupI :: T.Text -> [T.Text] -> Int
-lookupI key lookupList = fromMaybe 0 (elemIndex key lookupList)
+lookupI :: [T.Text] -> T.Text -> Int
+lookupI hay needle = fromMaybe 0 (elemIndex needle hay)
 
 removeRepeats :: [T.Text] -> [T.Text]
 removeRepeats list@(x:_) =
