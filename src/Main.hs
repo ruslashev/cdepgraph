@@ -15,7 +15,7 @@ main = do
     if length args /= 1 then do
         progName <- getProgName
         putStrLn $ "Usage: " ++ progName ++ " <directory>"
-        putStrLn   "Start a scan for source files in specified directory."
+        putStrLn   "Scan for source files in specified directory."
         putStrLn   ""
         putStrLn   "The resulting GraphViz (neato) code is outputted to"
         putStrLn   "stdout, so the following way might be preferred:"

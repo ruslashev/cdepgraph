@@ -1,9 +1,9 @@
 module Processing.Includes
     ( process
     , SrcFile(..)
-    , getExtensionT
-    , sourceFileExtsT
-    , headerFileExtsT
+    , getExtension
+    , sourceFileExts
+    , headerFileExts
     )
 where
 
@@ -17,32 +17,26 @@ data SrcFile = SrcFile { name :: T.Text
                        } deriving (Show)
 
 process :: [String] -> IO [SrcFile]
-process = mapM getSrcFile . filter isSourceFile
+process = mapM getSrcFile . filter isSourceFile . map T.pack
 
-getExtension :: String -> String
-getExtension = map toLower . reverse . takeWhile (/= '.') . reverse
-
-getExtensionT :: T.Text -> T.Text
-getExtensionT = T.map toLower . T.reverse . T.takeWhile (/= '.') . T.reverse
+getExtension :: T.Text -> T.Text
+getExtension = T.map toLower . T.reverse . T.takeWhile (/= '.') . T.reverse
 
 getDirectory :: T.Text -> T.Text
 getDirectory = T.reverse . T.drop 1 . T.dropWhile (/= '/') . T.reverse
 
-sourceFileExts, headerFileExts :: [String]
-sourceFileExts = ["cpp", "c", "cxx", "cc", "cp", "c++"]
-headerFileExts = ["hpp", "h", "hxx", "hh", "hp", "h++"]
-sourceFileExtsT, headerFileExtsT :: [T.Text]
-sourceFileExtsT = map T.pack sourceFileExts
-headerFileExtsT = map T.pack headerFileExts
+sourceFileExts, headerFileExts :: [T.Text]
+sourceFileExts = map T.pack ["cpp", "c", "cxx", "cc", "cp", "c++"]
+headerFileExts = map T.pack ["hpp", "h", "hxx", "hh", "hp", "h++"]
 
-isSourceFile :: String -> Bool
+isSourceFile :: T.Text -> Bool
 isSourceFile file =
-    getExtension file `elem` (sourceFileExts ++ headerFileExts)
+    getExtension file `elem` sourceFileExts ||
+    getExtension file `elem` headerFileExts
 
-getSrcFile :: String -> IO SrcFile
-getSrcFile file = do
-    let fileAsText = T.pack file
-    absIncludes <- map (convToAbs fileAsText) . getIncludes <$> Tio.readFile file
+getSrcFile :: T.Text -> IO SrcFile
+getSrcFile filepath = do
+    absIncludes <- map (convToAbs filepath) . getIncludes <$> Tio.readFile file
     return $ SrcFile fileAsText absIncludes
 
 getIncludes :: T.Text -> [T.Text]
@@ -52,16 +46,16 @@ getIncludes = map (T.drop 1 . T.dropWhile (/= ' '))
     where includeText = T.pack "#include"
 
 convToAbs :: T.Text -> T.Text -> T.Text
-convToAbs file include =
+convToAbs filepath include =
     if x == '"' then
-        let fileDir = getDirectory file in
+        let fileDir = getDirectory filepath in
         if T.take 3 xs == T.pack "../" then
             let upperDirectory = getDirectory fileDir
             in convToAbs (upperDirectory `T.append` T.pack "/")
                             (T.pack "\"" `T.append` T.drop 3 xs)
         else
             if T.take 2 xs == T.pack "./" then
-                convToAbs file (T.pack "\"" `T.append` T.drop 3 xs)
+                convToAbs filepath (T.pack "\"" `T.append` T.drop 3 xs)
             else
                 fileDir `T.append` T.cons '/' (T.init xs)
     else -- angular brackets or #defined path

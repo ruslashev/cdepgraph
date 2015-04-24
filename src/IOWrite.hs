@@ -22,16 +22,17 @@ genOutput clusters srcFilesI =
         header ++
         nodes
 
-textForCluster :: [SrcFileI] -> Cluster -> [T.Text]
+textForCluster :: [SrcFileI] -> Cluster -> T.Text
 textForCluster srcFiles (Folder name next) =
+    T.intercalate (T.pack "\n") $
     [ T.pack "subgraph cluster_" `T.append` name `T.append` T.pack " {" ] ++
     [ T.pack "style=filled;" ] ++
     [ T.pack "color=lightgrey;" ] ++
     [ T.pack "label=" `T.append` name `T.append` T.pack ";" ] ++
-    map (textForCluster srcFiles) next ++
+    [textForCluster srcFiles next] ++
     [ T.pack "}" ]
-textForCluster srcFiles (SystemInclude name) = [textForNode name srcFiles]
-textForCluster srcFiles (File name) = [textForNode name srcFiles]
+textForCluster srcFiles (SystemInclude name) = textForNode name srcFiles
+textForCluster srcFiles (File name) = textForNode name srcFiles
 
 textForNode :: T.Text -> [SrcFileI] -> T.Text
 textForNode name srcFiles =
