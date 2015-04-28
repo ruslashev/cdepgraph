@@ -1,5 +1,8 @@
-module Processing.Clusters
+module Processing.Clusters (clusterize)
 where
+
+-- Processing.Clusters, returns clusterized list of includes and list
+-- of indexed source files
 
 import Data.List (elemIndex, nub, partition, sort)
 import Data.Maybe (fromMaybe)
@@ -8,10 +11,15 @@ import System.FilePath.Posix (splitFileName,splitDirectories)
 
 import Processing.Includes
 
+-- A cluster is basically a thing to encapsulate all the files from one
+-- directory under one container. That's for includable local files,
+-- the ones that are used as (#include "header.hpp"). Since all includes
+-- are turned to clusters, other headers are defined as "SystemInclude"
 data Cluster = SystemInclude T.Text
-             | Folder T.Text Cluster
+             | Folder [Cluster]
              | File T.Text
              deriving (Show)
+
 data SrcFileI = SrcFileI { nameI :: Int
                          , includesI :: [Int]
                          } deriving (Show)
@@ -21,7 +29,7 @@ clusterize srcFiles =
     let listOfFilesAndIncludes = nub $ sort $ srcFilesToList srcFiles
         (fileIncludes,systemIncludes) =
             partition (\ x -> T.head x == '/') listOfFilesAndIncludes
-        fileIncsRepeatsRemoved = removeRepeats fileIncludes
+        fileIncsRepeatsRemoved = removeLeadingRepeats fileIncludes
         clusters = makeClusters fileIncsRepeatsRemoved systemIncludes
         srcFilesI = makeSrcFilesI listOfFilesAndIncludes srcFiles
     in (clusters, srcFilesI)
@@ -40,10 +48,10 @@ makeSrcFilesI lookupList (SrcFile name includes : rest) =
 lookupI :: [T.Text] -> T.Text -> Int
 lookupI hay needle = fromMaybe 0 (elemIndex needle hay)
 
-removeRepeats :: [T.Text] -> [T.Text]
-removeRepeats list@(x:_) =
+removeLeadingRepeats :: [T.Text] -> [T.Text]
+removeLeadingRepeats list@(x:_) =
     if all (\ y -> T.head x == T.head y) list
-    then removeRepeats (map T.tail list)
+    then removeLeadingRepeats (map T.tail list)
     else list
 
 makeClusters :: [T.Text] -> [T.Text] -> [Cluster]

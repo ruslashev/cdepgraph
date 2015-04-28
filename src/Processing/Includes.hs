@@ -7,6 +7,8 @@ module Processing.Includes
     )
 where
 
+-- Processing.Includes, produces list of files and their includes
+
 import Control.Applicative
 import Data.Char (toLower)
 import qualified Data.Text as T
@@ -36,8 +38,8 @@ isSourceFile file =
 
 getSrcFile :: T.Text -> IO SrcFile
 getSrcFile filepath = do
-    absIncludes <- map (convToAbs filepath) . getIncludes <$> Tio.readFile file
-    return $ SrcFile fileAsText absIncludes
+    absIncludes <- map (convToAbs filepath) . getIncludes <$> Tio.readFile (T.unpack filepath)
+    return $ SrcFile filepath absIncludes
 
 getIncludes :: T.Text -> [T.Text]
 getIncludes = map (T.drop 1 . T.dropWhile (/= ' '))

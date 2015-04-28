@@ -1,6 +1,8 @@
 module IORead (getAbsFileList)
 where
 
+-- IORead, gets list of files in directories
+
 import Control.Applicative
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 

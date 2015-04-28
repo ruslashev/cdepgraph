@@ -14,11 +14,12 @@ main = do
     args <- getArgs
     if length args /= 1 then do
         progName <- getProgName
+        putStrLn   "Error: no directory specified."
         putStrLn $ "Usage: " ++ progName ++ " <directory>"
         putStrLn   "Scan for source files in specified directory."
         putStrLn   ""
-        putStrLn   "The resulting GraphViz (neato) code is outputted to"
-        putStrLn   "stdout, so the following way might be preferred:"
+        putStrLn   "The resulting GraphViz (neato) code is outputted to stdout,"
+        putStrLn   "so the following way might be preferred:"
         putStrLn $ "    " ++ progName ++ " src/ | neato -T png > out.png"
     else
         startScan $ head args
@@ -33,11 +34,14 @@ startScan dir = do
     processed <- process files
     let (clusters,srcFilesI) = clusterize processed
 
-    putStr $ genOutput clusters srcFilesI
+    putStrLn "PROCESSED:"
+    print processed
+    putStrLn "CLUSTERS:"
+    print clusters
 
     where
-        test (Left x) = do
-            putStrLn x
+        test (Left err) = do
+            putStrLn err
             exitFailure
         test (Right list) =
             return list
