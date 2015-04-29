@@ -34,8 +34,8 @@ startScan dir = do
     processed <- process files
     let (clusters,srcFilesI) = clusterize processed
 
-    putStrLn "PROCESSED:"
-    print processed
+    -- putStrLn "PROCESSED:"
+    -- print processed
     putStrLn "CLUSTERS:"
     print clusters
 

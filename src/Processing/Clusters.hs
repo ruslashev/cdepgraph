@@ -48,17 +48,42 @@ removeLeadingRepeats list@(x:_) =
 
 makeClusters :: [T.Text] -> [T.Text] -> [Cluster]
 makeClusters fileIncludes sysIncludes =
-    map SystemInclude sysIncludes ++
-    filesToClusters fileIncludes
+    -- map SystemInclude sysIncludes ++
+    let clusters = filesToClusters fileIncludes
+    in mergeCommonFolders clusters
 
 filesToClusters :: [T.Text] -> [Cluster]
-filesToClusters files =
-    map (strToCluster . breakPath) files
-    where strToCluster :: [T.Text] -> Cluster
-          strToCluster (x:[]) = File x
-          strToCluster (x:xs) = Folder x [strToCluster xs]
-          breakPath :: T.Text -> [T.Text]
-          breakPath = map T.pack . filter (/= "/") . splitDirectories . T.unpack
+filesToClusters =
+    map (strToCluster . breakPath)
+    where
+        strToCluster :: [T.Text] -> Cluster
+        strToCluster (x:[]) = File x
+        strToCluster (x:xs) = Folder x [strToCluster xs]
+        breakPath :: T.Text -> [T.Text]
+        breakPath = map T.pack . filter (/= "/") . splitDirectories . T.unpack
+
+mergeCommonFolders :: [Cluster] -> [Cluster]
+mergeCommonFolders (x:xs) =
+    case x of
+        Folder name contents ->
+            let (sameFolders,everythingElse) = getTheseFolders name xs
+                folder = mergeToFolder sameFolders
+            in folder : everythingElse
+    where getTheseFolders :: T.Text -> Cluster -> ([Cluster],[Cluster])
+          getTheseFolders name clusters = -- partition?
+              (filter (isFolderOfThisName name) clusters,
+               filter (not . isFolderOfThisName name) clusters)
+          isFolderOfThisName :: T.Text -> Cluster -> Bool
+          isFolderOfThisName givenName (Folder testName _) = testName == givenName
+          isFolderOfThisName _ _ = False
+          mergeToFolder :: [Cluster] -> Cluster
+          mergeToFolder [] = []
+          mergeToFolder (f:fs) =
+              let (Folder name firstFolderContents) = f
+              in Folder name $ firstFolderContents ++ getContents fs
+          getContents :: [Cluster] -> [T.Text]
+          getContents [] = []
+          getContents (Folder _ contents : rest) = contents ++ getContents rest
 
 makeSrcFilesI :: [T.Text] -> [SrcFile] -> [SrcFileI]
 makeSrcFilesI _ [] = []
