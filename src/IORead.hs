@@ -3,14 +3,15 @@ where
 
 -- IORead, gets list of files in directories
 
-import Control.Applicative
+import Control.Applicative ((<$>))
 import System.Directory (getDirectoryContents, doesDirectoryExist)
+import Data.List (sort)
 
 getAbsFileList :: String -> IO (Maybe [String])
 getAbsFileList dir = do
     valid <- doesDirectoryExist dir
     if valid then do
-        list <- getFiles dir
+        list <- sort <$> getFiles dir
         return $ Just list
     else
         return Nothing

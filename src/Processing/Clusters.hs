@@ -1,5 +1,6 @@
-module Processing.Clusters (clusterize)
+module Processing.Clusters --(clusterize)
 where
+{-
 
 -- Processing.Clusters, returns clusterized list of includes and list
 -- of indexed source files
@@ -94,3 +95,4 @@ makeSrcFilesI lookupList (SrcFile name includes : rest) =
 lookupI :: [T.Text] -> T.Text -> Int
 lookupI hay needle = fromMaybe 0 (elemIndex needle hay)
 
+-}

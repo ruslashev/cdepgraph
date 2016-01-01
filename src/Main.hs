@@ -2,7 +2,7 @@ module Main where
 
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
-import qualified Data.Text.IO as Tio
+import qualified Data.Text as T
 
 import IORead
 import Processing.Includes
@@ -36,6 +36,12 @@ startScan dir = do
             exitFailure
 
     processed <- processIncludes files
+    mapM_ ( \ (SrcFile n i) -> do
+        putStrLn (T.unpack n ++ ":")
+        mapM_ (putStrLn . ("    " ++ ) . T.unpack) i
+        )
+        processed
+    {-
     let (clusters,srcFilesI) = clusterize processed
 
     -- putStrLn "PROCESSED:"
@@ -49,4 +55,5 @@ startScan dir = do
             exitFailure
         test (Right list) =
             return list
+        -}
 

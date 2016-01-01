@@ -1,6 +1,7 @@
-module IOWrite (genOutput)
+module IOWrite --(genOutput)
 where
 
+{-
 import qualified Data.Text as T
 
 import Control.Applicative
@@ -57,3 +58,4 @@ colorizeNode text
           green  = T.pack "color=\"#D4F9D4\""
           red    = T.pack "color=\"#FAD5D5\""
 
+-}

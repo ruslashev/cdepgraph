@@ -9,7 +9,7 @@ where
 
 -- Processing.Includes, produces list of files and their includes
 
-import Control.Applicative
+import Control.Applicative ((<$>))
 import Data.Char (toLower)
 import qualified Data.Text as T
 import qualified Data.Text.IO as Tio -- Data.Text.Lazy.IO
