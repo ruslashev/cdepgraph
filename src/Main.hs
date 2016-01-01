@@ -28,8 +28,12 @@ main = do
 
 startScan :: String -> IO ()
 startScan dir = do
-    filesE <- getAbsFileList dir
-    files <- test filesE
+    filesM <- getAbsFileList dir
+    files <- case filesM of
+        Just list -> return list
+        Nothing -> do
+            putStrLn $ "Directory \"" ++ dir ++ "\" doesn't exist"
+            exitFailure
 
     processed <- process files
     let (clusters,srcFilesI) = clusterize processed

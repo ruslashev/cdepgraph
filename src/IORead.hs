@@ -6,13 +6,14 @@ where
 import Control.Applicative
 import System.Directory (getDirectoryContents, doesDirectoryExist)
 
-getAbsFileList :: String -> IO (Either String [String])
+getAbsFileList :: String -> IO (Maybe [String])
 getAbsFileList dir = do
     valid <- doesDirectoryExist dir
     if valid then do
         list <- getFiles dir
-        return $ Right list
-    else return $ Left $ "Directory \"" ++ dir ++ "\" doesn't exist"
+        return $ Just list
+    else
+        return Nothing
 
 getFiles :: String -> IO [String]
 getFiles dir = do
