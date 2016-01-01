@@ -35,7 +35,7 @@ startScan dir = do
             putStrLn $ "Directory \"" ++ dir ++ "\" doesn't exist"
             exitFailure
 
-    processed <- process files
+    processed <- processIncludes files
     let (clusters,srcFilesI) = clusterize processed
 
     -- putStrLn "PROCESSED:"

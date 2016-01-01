@@ -1,5 +1,5 @@
 module Processing.Includes
-    ( process
+    ( processIncludes
     , SrcFile(..)
     , getExtension
     , sourceFileExts
@@ -12,38 +12,37 @@ where
 import Control.Applicative
 import Data.Char (toLower)
 import qualified Data.Text as T
-import qualified Data.Text.IO as Tio
+import qualified Data.Text.IO as Tio -- Data.Text.Lazy.IO
 
 data SrcFile = SrcFile { name :: T.Text
                        , includes :: [T.Text]
                        } deriving (Show)
 
-process :: [String] -> IO [SrcFile]
-process = mapM getSrcFile . filter isSourceFile . map T.pack
-
-getExtension :: T.Text -> T.Text
-getExtension = T.map toLower . T.reverse . T.takeWhile (/= '.') . T.reverse
-
-getDirectory :: T.Text -> T.Text
-getDirectory = T.reverse . T.drop 1 . T.dropWhile (/= '/') . T.reverse
-
-sourceFileExts, headerFileExts :: [T.Text]
-sourceFileExts = map T.pack ["cpp", "c", "cxx", "cc", "cp", "c++"]
-headerFileExts = map T.pack ["hpp", "h", "hxx", "hh", "hp", "h++"]
+processIncludes :: [String] -> IO [SrcFile]
+processIncludes = mapM getSrcFile . filter isSourceFile . map T.pack
 
 isSourceFile :: T.Text -> Bool
 isSourceFile file =
     getExtension file `elem` sourceFileExts ||
     getExtension file `elem` headerFileExts
 
+getExtension :: T.Text -> T.Text
+getExtension = T.map toLower . T.reverse . T.takeWhile (/= '.') . T.reverse
+
+sourceFileExts, headerFileExts :: [T.Text]
+sourceFileExts = map T.pack ["cpp", "c", "cxx", "cc", "cp", "c++"]
+headerFileExts = map T.pack ["hpp", "h", "hxx", "hh", "hp", "h++"]
+
 getSrcFile :: T.Text -> IO SrcFile
 getSrcFile filepath = do
-    absIncludes <- map (convToAbs filepath) . getIncludes <$> Tio.readFile (T.unpack filepath)
+    absIncludes <- map (convToAbs filepath) . getIncludes <$>
+        Tio.readFile (T.unpack filepath)
     return $ SrcFile filepath absIncludes
 
 getIncludes :: T.Text -> [T.Text]
 getIncludes = map (T.drop 1 . T.dropWhile (/= ' '))
-            . filter ((includeText ==) . T.take (T.length includeText))
+            . filter ((includeText ==)
+            . T.take (T.length includeText))
             . T.lines
     where includeText = T.pack "#include"
 
@@ -64,4 +63,7 @@ convToAbs filepath include =
         include
     where x  = T.head include
           xs = T.tail include
+
+getDirectory :: T.Text -> T.Text
+getDirectory = T.reverse . T.drop 1 . T.dropWhile (/= '/') . T.reverse
 
