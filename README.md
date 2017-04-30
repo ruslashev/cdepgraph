@@ -15,3 +15,6 @@ In future there will probably be options such as `-o <outfile>`, but that's for 
 ## License
 See `LICENSE` file.
 
+## Screenshot
+
+<img src="http://i.imgur.com/kEZ5lke.png">
